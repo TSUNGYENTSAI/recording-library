@@ -1,0 +1,24 @@
+name: Apple Silicon checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test-and-build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify architecture
+        run: test "$(uname -m)" = arm64
+      - name: Synthetic tests (no recording permissions or models)
+        run: ./Scripts/test.sh
+      - name: Build app and pinned Whisper worker
+        run: ./Scripts/build.sh
+      - name: Headless startup in an isolated Library
+        run: |
+          library_dir=$(mktemp -d)
+          trap 'rm -rf "$library_dir"' EXIT
+          "dist/Recording Library.app/Contents/MacOS/RecordingLibrary" --library "$library_dir" --check-library
