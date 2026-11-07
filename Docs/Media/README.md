@@ -1,9 +1,11 @@
 # Native interface walkthroughs
 
-- `workflow.gif` / `workflow-poster.png`: English controls and captions.
-- `workflow-zh-TW.gif` / `workflow-poster-zh-TW.png`: Traditional Chinese controls and captions.
+- `workflow.gif` / `workflow-poster.png`: English controls, captions, fictional transcript, titles and edit notes.
+- `workflow-zh-TW.gif` / `workflow-poster-zh-TW.png`: Traditional Chinese controls, captions and fictional content.
 
 Both use the **production SwiftUI/AppKit view tree**, including `LibraryView`, `CaptureControls`, the transcript viewer and Trash. No app layout, controls or transcript UI are redrawn by the compositor. Captions are placed above the captured view; a disclosure remains below it.
+
+The English fixture uses translated illustrative titles for an English-only walkthrough; the current Qwen naming prompt still produces Traditional Chinese titles. This demo does not add English title generation to the app.
 
 The demo shows Start recording → Stop and save → incremental transcript preview → optional title/category → completed → edit/copy/export controls → search → Trash → restore / Keep forever. It demonstrates the UI with fictional test data; recording and inference states are replayed and waits shortened. It is not a live recording, model output or performance benchmark. The copy/export controls are shown; the script does not overwrite the clipboard or open a Save dialog.
 

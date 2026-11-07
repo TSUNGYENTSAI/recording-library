@@ -15,7 +15,7 @@ let english:[(String,String)]=[
     ("Stop and save when you are finished","Your recording is archived in place, then queued for transcription."),
     ("Whisper transcribes locally","Text starts appearing after audio preparation and model loading."),
     ("Read the growing transcript","Follow the live preview. Words may change until the result is finalized."),
-    ("Qwen suggests a title and category","Optional local naming; the original transcript is kept as it is."),
+    ("Qwen suggests a title and category","Naming currently uses Traditional Chinese; example titles here are translated into English."),
     ("Completed, dated and categorized","Return later to find the conversation in your Library."),
     ("Review, edit, copy or export","Edits are saved separately. Copy the transcript or export Markdown using the upper-right icons."),
     ("Find Chinese phrases or English terms","Search titles and transcript text. Here we search for API."),

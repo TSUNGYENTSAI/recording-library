@@ -33,11 +33,16 @@ import AVFoundation
     let host:NSHostingView<AnyView>
     var input:FixtureInput?
     var frames:[String]=[]
-    let lines=[
+    var english:Bool {Bundle.main.preferredLocalizations.first == "en"}
+    var lines:[String] {english ? [
+        "We are discussing how to record a headphone meeting using microphone and system audio.",
+        "After stopping, Whisper transcribes locally and Qwen suggests a title and category.",
+        "We want an offline workflow with searchable API terms. Keep the original transcript separately."
+    ] : [
         "今天討論戴耳機開會時，如何把麥克風與系統聲音一起錄下來。",
         "停止錄音後，用 Whisper 在本機轉錄，再由 Qwen 建議標題與分類。",
         "我們希望離線工作，也能搜尋 API 和中文關鍵字。原始逐字稿要另外保留。"
-    ]
+    ]}
     init(root:URL) throws {
         self.root=root
         guard root.path.contains("/.build/workflow."), !FileManager.default.fileExists(atPath:root.path) else {throw LibraryError("Capture requires a fresh isolated .build/workflow directory")}
@@ -79,7 +84,7 @@ import AVFoundation
         await capture.finishForTermination()
         guard var record=engine.recordings.first else {throw LibraryError("Synthetic recording was not archived: "+(capture.errorMessage ?? ""))}
         capture=CaptureController(engine:engine,permission:{true})
-        record.title="2026-01-15 錄音 10-00-00"
+        record.title=english ? "2026-01-15 Recording 10-00-00" : "2026-01-15 錄音 10-00-00"
         record.recordedAt=ISO8601DateFormatter().date(from:"2026-01-15T02:00:00Z")
         record.created=record.recordedAt!
         var attempt=Attempt();attempt.status="running";attempt.loadingMode="incremental";attempt.language="auto"
@@ -100,12 +105,13 @@ import AVFoundation
         record.metadataAttempts=[metadata];try save(record)
         engine.activity="整理標題與分類"
         try await shot("06-naming",selection:record.id)
-        record.title="2026-01-15 · 耳機會議的本機錄音流程";record.category="產品討論"
+        record.title=english ? "2026-01-15 · Headphone meeting workflow" : "2026-01-15 · 耳機會議的本機錄音流程";record.category="產品討論"
         metadata.status="completed";metadata.proposedTitle=record.title;metadata.proposedCategory=record.category;metadata.titleApplied=true;metadata.categoryApplied=true;metadata.finished=Date()
         record.metadataAttempts=[metadata];try save(record)
         engine.activeID=nil;engine.activity="";engine.livePreviews=[:]
         try await shot("07-completed",selection:record.id)
-        record=try engine.store.saveEdit(record,text:text+"\n\n（人工補充：API 是工程術語，原始稿維持不變。）")
+        let editNote=english ? "Editor note: API is a technical term. The original transcript is unchanged." : "（人工補充：API 是工程術語，原始稿維持不變。）"
+        record=try engine.store.saveEdit(record,text:text+"\n\n"+editNote)
         try engine.reload()
         try await shot("08-review",selection:record.id)
         try await shot("09-search",selection:record.id,query:"API")
