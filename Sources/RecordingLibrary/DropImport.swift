@@ -29,7 +29,7 @@ final class RecordingDropView: NSView {
         super.init(frame: frameRect)
         wantsLayer = true; layer?.cornerRadius = 9; layer?.borderWidth = 1
         layer?.borderColor = NSColor.separatorColor.cgColor
-        label.stringValue = "拖入語音備忘錄或 Finder 檔案\n自動歸檔・相同錄音只保留一份"
+        label.stringValue = L("拖入語音備忘錄或 Finder 檔案\n自動歸檔・相同錄音只保留一份")
         label.alignment = .center; label.font = .systemFont(ofSize: 11)
         label.textColor = .secondaryLabelColor; label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(label)
@@ -37,10 +37,10 @@ final class RecordingDropView: NSView {
         var types = NSFilePromiseReceiver.readableDraggedTypes.map { NSPasteboard.PasteboardType($0) }
         types += [.fileURL, .URL, .string, .fileContents, NSPasteboard.PasteboardType(UTType.audio.identifier), NSPasteboard.PasteboardType(UTType.movie.identifier),NSPasteboard.PasteboardType("public.mpeg-4-audio"),NSPasteboard.PasteboardType("public.mpeg-4")]
         registerForDraggedTypes(types)
-        setAccessibilityLabel("錄音歸檔拖放區")
+        setAccessibilityLabel(L("錄音歸檔拖放區"))
     }
     func configure(expanded: Bool) {
-        label.stringValue = expanded ? "把錄音或影片拖到這裡\n\n支援直接從語音備忘錄、Finder 拖入\n完成歸檔後自動轉錄，相同錄音不重複複製" : "拖入語音備忘錄或 Finder 檔案\n自動歸檔・相同錄音只保留一份"
+        label.stringValue = L(expanded ? "把錄音或影片拖到這裡\n\n支援直接從語音備忘錄、Finder 拖入\n完成歸檔後自動轉錄，相同錄音不重複複製" : "拖入語音備忘錄或 Finder 檔案\n自動歸檔・相同錄音只保留一份")
         label.font = .systemFont(ofSize:expanded ? 16 : 11)
         layer?.borderWidth = expanded ? 1.5 : 1
     }
@@ -88,7 +88,7 @@ final class RecordingDropView: NSView {
                 try data.write(to:file,options:.atomic); onReceive?([file],directory); return true
             } catch { onError?(error.localizedDescription); return false }
         }
-        onError?("這次拖曳沒有提供可讀取的檔案。請拖到錄音歸檔區，或先從語音備忘錄匯出 m4a 再匯入。")
+        onError?(L("這次拖曳沒有提供可讀取的檔案。請拖到錄音歸檔區，或先從語音備忘錄匯出 m4a 再匯入。"))
         return false
     }
     nonisolated static func stagingDirectory() throws -> URL {

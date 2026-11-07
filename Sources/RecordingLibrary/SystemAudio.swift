@@ -4,7 +4,7 @@ import CoreAudio
 
 enum CaptureMode: String, Codable, CaseIterable {
     case microphone, system, both
-    var label: String {switch self {case .microphone:return "麥克風";case .system:return "系統聲音";case .both:return "麥克風＋系統聲音"}}
+    var label: String {switch self {case .microphone:return L("麥克風");case .system:return L("系統聲音");case .both:return L("麥克風＋系統聲音")}}
     var hasMicrophone: Bool {self != .system}
     var hasSystem: Bool {self != .microphone}
 }

@@ -1,0 +1,5 @@
+This is a fictional product discussion for the Recording Library demo.
+We want to test recording a meeting while wearing headphones. The app should capture our microphone and the system audio.
+After we stop recording, Whisper should transcribe the audio locally. Qwen can suggest a short title and one category.
+The first milestone is an offline workflow. We should keep the original transcript and save manual corrections separately.
+For the next review, let's test search, copying text, and restoring a recording from the app's trash.

@@ -2,11 +2,19 @@
 
 A local recording and transcript library for Apple Silicon Macs. Record a meeting or import audio/video, transcribe on your Mac, review the original, and take the text into the tools you already use.
 
-**Early preview — macOS 14.2+, Apple Silicon.** The interface currently uses Traditional Chinese. Source builds and manual dependency setup are supported; this is not yet a notarized, zero-setup consumer download.
+**Early preview — macOS 14.2+, Apple Silicon.** English and Traditional Chinese controls follow your macOS language preference. Source builds and manual dependency setup are supported; this is not yet a notarized, zero-setup consumer download.
 
 ## Workflow
 
-**Record / Import → Whisper → Review / Edit → Search / Copy / Export → Archive**
+**Press Record → Stop & save → Transcribe locally → Name & classify → Review / Search / Copy → Manage**
+
+![Recording-first illustrated walkthrough with fictional data](Docs/Media/workflow.gif)
+
+*Illustrated walkthrough, not a screen recording. Fictional data and shortened waits; not a speed or accuracy benchmark.*
+
+Start a headphone meeting recording, capture a personal voice note, or save a learning session. When you stop, local Whisper produces the transcript; optional Qwen suggests a dated title and category. Return later to search, check the audio, and copy useful text into your own tools. Existing audio/video can also be imported.
+
+[Try fictional examples without recording a real conversation](Examples/README.md).
 
 - Microphone, system audio, or both. In dual-source mode the Mac's built-in microphone is selected; headphones keep playing normally.
 - M4A and other common audio formats; MP4 and other video audio tracks via FFmpeg.
@@ -35,6 +43,10 @@ open "$HOME/Applications/Recording Library.app"
 `build.sh` builds the pinned WhisperKit helper from source. It does not depend on an existing precompiled helper or a MacWhisper installation. Build output is `dist/Recording Library.app`; generated files are ignored by Git. Builds use an ad-hoc local signature. See [distribution notes](Docs/DISTRIBUTION.md) before distributing downloaded binaries to other users.
 
 `install.sh` installs to `~/Applications/Recording Library.app` and refuses to overwrite an existing bundle. Quit the app and move the previous bundle aside before updating. Your Library and models remain outside the app bundle.
+
+## Languages
+
+App controls support **English and Traditional Chinese**, following your macOS preferred language (or the per-app language in System Settings). This is separate from the recording/transcription language hint. Changing the interface language does not translate your transcripts or existing titles. Qwen's current naming prompt produces Traditional Chinese titles and retains technical terms; English title generation is not yet included. Category labels are translated for display while their stored IDs remain unchanged.
 
 ## Models and setup
 

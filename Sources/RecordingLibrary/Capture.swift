@@ -97,10 +97,10 @@ extension LibraryEngine {
         let hash = try await digest(media)
         let bytes = (try FileManager.default.attributesOfItem(atPath:media.path)[.size] as? NSNumber)?.int64Value ?? 0
         let formatter = DateFormatter(); formatter.locale = Locale(identifier:"zh_TW"); formatter.timeZone = TimeZone.current; formatter.dateFormat = "HH-mm-ss"
-        var item = Recording(id:draft.id,title:recordingDatePrefix(draft.startedAt) + " 錄音 " + formatter.string(from:draft.startedAt),sourcePath:media.path,managedName:draft.managedName,duration:duration,bytes:bytes,isVideo:false)
+        var item = Recording(id:draft.id,title:recordingDatePrefix(draft.startedAt) + L(" 錄音 ") + formatter.string(from:draft.startedAt),sourcePath:media.path,managedName:draft.managedName,duration:duration,bytes:bytes,isVideo:false)
         item.recordedAt = draft.startedAt; item.recordedDateSource = "App 錄音開始時間";item.created = draft.startedAt
         item.titleManuallyEdited = false;item.categoryManuallyEdited = false;item.transcriptionLanguage = draft.language
-        item.contentSHA256 = hash;item.audioSHA256 = try await audioDigest(media);item.archivedAt = Date();item.sourcePaths = [];item.importOrigin = "App " + (draft.mode ?? .microphone).label + "錄音"
+        item.contentSHA256 = hash;item.audioSHA256 = try await audioDigest(media);item.archivedAt = Date();item.sourcePaths = [];item.importOrigin = L("App 錄音") + " · " + (draft.mode ?? .microphone).label
         item.captureMode = (draft.mode ?? .microphone).rawValue
         // No copy or move: the recorder has already written the final owned media file.
         try writeArchiveManifest(item);try store.save(item);try reload()
@@ -159,7 +159,7 @@ extension LibraryEngine {
                 if #available(macOS 14.2, *) {session = try SystemAudioSession(url:engine.captureMedia(draft),mode:mode)}
                 else {throw LibraryError("系統聲音錄製需要 macOS 14.2 或更新版本。")}
             } else {session = try MicrophoneSession(url:engine.captureMedia(draft))}
-            self.session = session;inputLabel = session.inputLabel
+            self.session = session;inputLabel = L(session.inputLabel)
             session.finished = { [weak self] success,message in self?.didFinish(success:success,message:message) }
             guard session.record() else {throw LibraryError(session.failureMessage ?? "無法開始錄音，請確認裝置與錄音權限。")}
             sleepActivity = ProcessInfo.processInfo.beginActivity(options:[.idleSystemSleepDisabled],reason:"錄音中")

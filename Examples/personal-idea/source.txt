@@ -1,0 +1,4 @@
+This is a fictional personal voice note for the Recording Library demo.
+I had an idea on my walk today. I want one place to keep short thoughts without organizing files by hand.
+I can press record, talk for a minute, and stop. Later I want to search for an idea and copy the transcript into my notes.
+The original audio should stay available so I can check what I actually said.

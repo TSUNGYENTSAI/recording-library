@@ -18,6 +18,7 @@ mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/WhisperValidation" "$app
 swiftc -swift-version 5 -O -parse-as-library -module-cache-path "$repo/.build/module-cache" -target arm64-apple-macosx14.2 "$repo"/Sources/RecordingLibrary/*.swift -o "$app/Contents/MacOS/RecordingLibrary" -lsqlite3
 cp "$worker" "$app/Contents/Resources/WhisperValidation/$worker_name"
 cp "$text_worker" "$app/Contents/Resources/TextModel/$text_name"
+cp -R "$repo/Resources/." "$app/Contents/Resources/"
 cp "$repo/Assets/AppIcon.icns" "$app/Contents/Resources/AppIcon.icns"
 cp "$repo/Scripts/setup-models.sh" "$repo/Scripts/setup_models.py" "$repo/Scripts/models.lock.json" "$repo/Scripts/requirements.lock" "$app/Contents/Resources/Setup/"
 cp "$repo/LICENSE" "$repo/THIRD_PARTY_NOTICES.md" "$repo/Docs/WhisperKit-LICENSE" "$app/Contents/Resources/Licenses/"
@@ -27,12 +28,14 @@ cat > "$app/Contents/Info.plist" <<PLIST
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>RecordingLibrary</string>
 <key>CFBundleIdentifier</key><string>local.recordinglibrary.mac</string>
+<key>CFBundleDevelopmentRegion</key><string>en</string>
+<key>CFBundleLocalizations</key><array><string>en</string><string>zh-Hant</string></array>
 <key>CFBundleName</key><string>Recording Library</string>
 <key>CFBundleDisplayName</key><string>Recording Library</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
-<key>CFBundleShortVersionString</key><string>0.8.0</string>
-<key>CFBundleVersion</key><string>9</string>
+<key>CFBundleShortVersionString</key><string>0.9.0</string>
+<key>CFBundleVersion</key><string>10</string>
 <key>LSMinimumSystemVersion</key><string>14.2</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSAudioCaptureUsageDescription</key><string>Record system audio locally for transcription while headphones continue playing.</string>

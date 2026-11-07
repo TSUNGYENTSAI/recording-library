@@ -22,3 +22,7 @@ jobs:
           library_dir=$(mktemp -d)
           trap 'rm -rf "$library_dir"' EXIT
           "dist/Recording Library.app/Contents/MacOS/RecordingLibrary" --library "$library_dir" --check-library
+      - name: English and Traditional Chinese controls (no Library or permissions)
+        run: |
+          "dist/Recording Library.app/Contents/MacOS/RecordingLibrary" --check-localization -AppleLanguages '(en)'
+          "dist/Recording Library.app/Contents/MacOS/RecordingLibrary" --check-localization -AppleLanguages '(zh-Hant)'

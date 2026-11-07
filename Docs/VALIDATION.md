@@ -19,7 +19,7 @@ mkdir -p .build/test-data .build/test-bins
 say -v Samantha -o .build/test-data/synthetic.aiff "A synthetic discussion of the Revit API and local recording library. Original recordings must remain unchanged."
 ffmpeg -nostdin -i .build/test-data/synthetic.aiff -c:a aac .build/test-data/synthetic.m4a
 base=Sources/RecordingLibrary
-swiftc -swift-version 5 -O -parse-as-library -module-cache-path .build/module-cache -target arm64-apple-macosx14.2 "$base/Models.swift" "$base/Store.swift" "$base/Configuration.swift" "$base/Engine.swift" Tests/LocalPipelineChecks.swift -o .build/test-bins/local-pipeline -lsqlite3
+swiftc -swift-version 5 -O -parse-as-library -module-cache-path .build/module-cache -target arm64-apple-macosx14.2 "$base/Localization.swift" "$base/Models.swift" "$base/Store.swift" "$base/Configuration.swift" "$base/Engine.swift" Tests/LocalPipelineChecks.swift -o .build/test-bins/local-pipeline -lsqlite3
 .build/test-bins/local-pipeline "$PWD" "$PWD/.build/test-data/synthetic.m4a"
 ```
 

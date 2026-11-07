@@ -111,7 +111,7 @@ func searchFold(_ text: String) -> String {
 }
 struct LibraryError: LocalizedError {
     let message: String
-    init(_ message: String) { self.message = message }
+    init(_ message: String) { self.message = L(message) }
     var errorDescription: String? { message }
 }
 struct TranscriptDocument {
