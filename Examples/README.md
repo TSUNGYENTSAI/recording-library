@@ -19,6 +19,6 @@ For the **recording-first** workflow, read the fictional text aloud after pressi
 | [Product discussion](product-discussion/source.txt) | Headphone meeting → offline transcript → title/category | `offline`, `Whisper` |
 | [Personal idea](personal-idea/source.txt) | A short voice note you can find later | `walk`, `voice note` |
 
-The [workflow GIF](../Docs/Media/workflow.gif) is an **illustrated walkthrough with fictional data**, not a screen recording, live model output or a performance benchmark. Recording/transcription waits are shortened. No real meeting audio or transcripts are included.
+The [English workflow GIF](../Docs/Media/workflow.gif) and [Traditional Chinese workflow GIF](../Docs/Media/workflow-zh-TW.gif) use **the production app views with fictional fixture state** and explanatory captions. Recording and inference states are replayed, with waits shortened. These are not live audio capture, live model output or performance benchmarks. No real meeting audio or transcripts are included.
 
 繁體中文：日常使用從「開始錄音」開始，停止儲存後自動轉錄，再由選用的 Qwen 命名分類。上面的腳本只在本機產生虛構測試語音，不播放、不錄音，也不修改資料庫；可拖入 App 測試。JSON 的標題分類是示意，實際辨識結果可能不同。

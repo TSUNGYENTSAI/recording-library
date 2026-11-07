@@ -8,9 +8,9 @@ A local recording and transcript library for Apple Silicon Macs. Record a meetin
 
 **Press Record → Stop & save → Transcribe locally → Name & classify → Review / Search / Copy → Manage**
 
-![Recording-first illustrated walkthrough with fictional data](Docs/Media/workflow.gif)
+![Actual Recording Library interface with captions and fictional demo data](Docs/Media/workflow.gif)
 
-*Illustrated walkthrough, not a screen recording. Fictional data and shortened waits; not a speed or accuracy benchmark.*
+*Actual app views with step-by-step captions and fictional data. Recording/inference states are replayed and waits shortened; this is not a live recording or model benchmark.*
 
 Start a headphone meeting recording, capture a personal voice note, or save a learning session. When you stop, local Whisper produces the transcript; optional Qwen suggests a dated title and category. Return later to search, check the audio, and copy useful text into your own tools. Existing audio/video can also be imported.
 
