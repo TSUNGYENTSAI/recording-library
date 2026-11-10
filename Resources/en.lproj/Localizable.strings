@@ -346,3 +346,5 @@
 "麥克風設定" = "Microphone settings";
 "麥克風音量" = "Microphone level";
 "麥克風＋系統聲音" = "Microphone + system audio";
+
+"已自動同步音訊來源，錄音持續中。" = "Audio sources synchronized automatically. Recording continues.";

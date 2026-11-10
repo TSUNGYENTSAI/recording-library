@@ -1,4 +1,14 @@
 import Foundation
+@MainActor final class SynchronizingSession:AudioRecordingSession {
+ var elapsed:TimeInterval {12}
+ var power:Float {-10}
+ var warningMessage:String? {"已自動同步音訊來源，錄音持續中。"}
+ var finished:((Bool,String?)->Void)?
+ func record()->Bool {true}
+ func pause() {}
+ func updateMeters() {}
+ func stop() {let callback=finished;finished=nil;callback?(false,"Synthetic session ended")}
+}
 @main struct ConfigurationChecks {
  static func check(_ condition:@autoclosure () throws -> Bool,_ message:String) throws {if try !condition() {throw LibraryError(message)}}
  @MainActor static func wait(_ engine:LibraryEngine) async throws {
@@ -45,6 +55,11 @@ text='Synthetic Revit API review. This is public test data.'
   try check(try contentDigest(raw)==digest,"Naming modified raw")
   settings.automaticMetadata=true;try engine.updateConfiguration(settings)
   try check(!engine.configuration.readiness.isEmpty,"Missing text runtime not reported")
-  engine.shutdown();print("CONFIGURATION CHECKS PASSED")
+  let capture=CaptureController(engine:engine,permission:{true},makeSession:{_ in SynchronizingSession()})
+  await capture.start(language:"auto",mode:.both)
+  capture.refreshMeters()
+  try check(capture.state == .recording && capture.warningMessage != nil && capture.errorMessage == nil,"Synchronization notice stopped recording or became a fatal error")
+  capture.stop()
+  engine.shutdown();print("CONFIGURATION CHECKS PASSED: including nonfatal recording synchronization notice")
  }
 }

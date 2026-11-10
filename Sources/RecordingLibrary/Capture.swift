@@ -17,6 +17,7 @@ struct CaptureDraft: Codable, Identifiable {
     var systemPower: Float { get }
     var inputLabel: String { get }
     var failureMessage: String? { get }
+    var warningMessage: String? { get }
     var finished: ((Bool, String?) -> Void)? { get set }
     func record() -> Bool
     func pause()
@@ -29,6 +30,7 @@ extension AudioRecordingSession {
     var systemPower:Float {-160}
     var inputLabel:String {"系統預設麥克風"}
     var failureMessage:String? {nil}
+    var warningMessage:String? {nil}
 }
 
 @MainActor final class MicrophoneSession: NSObject, AudioRecordingSession, AVAudioRecorderDelegate {
@@ -122,6 +124,7 @@ extension LibraryEngine {
     @Published private(set) var drafts: [CaptureDraft] = []
     @Published private(set) var savedID: UUID?
     @Published var errorMessage: String?
+    @Published private(set) var warningMessage: String?
     let engine: LibraryEngine
     private var session: AudioRecordingSession?
     private var currentDraft: CaptureDraft?
@@ -148,7 +151,7 @@ extension LibraryEngine {
     func refreshDrafts() {do {drafts = try engine.pendingCaptures()} catch {errorMessage = error.localizedDescription}}
     func start(language: String, mode: CaptureMode = .microphone) async {
         guard !busy, !terminating else {return}
-        state = .requesting;errorMessage = nil;savedID = nil;activeMode = mode
+        state = .requesting;errorMessage = nil;warningMessage = nil;savedID = nil;activeMode = mode
         if mode.hasMicrophone, !(await permission()) {state = .idle;errorMessage = "尚未允許麥克風。請在「系統設定 → 隱私權與安全性 → 麥克風」允許 Recording Library，再重試。";return}
         guard !terminating else {state = .idle;return}
         do {
@@ -172,7 +175,7 @@ extension LibraryEngine {
     }
     func refreshMeters() {
         guard state == .recording, let session else {return}
-        elapsed = session.elapsed;session.updateMeters()
+        elapsed = session.elapsed;session.updateMeters();warningMessage = session.warningMessage
         microphoneLevel = activeMode.hasMicrophone ? min(1,max(0,pow(10,Double(session.microphonePower)/20))) : 0
         systemLevel = activeMode.hasSystem ? min(1,max(0,pow(10,Double(session.systemPower)/20))) : 0
         level = max(microphoneLevel,systemLevel)

@@ -34,8 +34,8 @@ cat > "$app/Contents/Info.plist" <<PLIST
 <key>CFBundleDisplayName</key><string>Recording Library</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
-<key>CFBundleShortVersionString</key><string>0.9.0</string>
-<key>CFBundleVersion</key><string>10</string>
+<key>CFBundleShortVersionString</key><string>0.9.1</string>
+<key>CFBundleVersion</key><string>11</string>
 <key>LSMinimumSystemVersion</key><string>14.2</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSAudioCaptureUsageDescription</key><string>Record system audio locally for transcription while headphones continue playing.</string>

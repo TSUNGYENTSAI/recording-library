@@ -43,7 +43,7 @@ import AVFoundation
         for (micRate,sysRate,kind,interleaved) in cases {
             let micFormat = AVAudioFormat(commonFormat:.pcmFormatFloat32,sampleRate:micRate,channels:1,interleaved:false)!
             let sysFormat = AVAudioFormat(commonFormat:kind,sampleRate:sysRate,channels:2,interleaved:interleaved)!
-            let mixer = try PCMInputMixer(layouts:[PCMInputLayout(micFormat.streamDescription.pointee,firstChannel:0),PCMInputLayout(sysFormat.streamDescription.pointee,firstChannel:1)],microphoneChannels:1,totalChannels:3)
+            let mixer = try PCMInputMixer(layouts:[PCMInputLayout(micFormat.streamDescription.pointee,firstChannel:0),PCMInputLayout(sysFormat.streamDescription.pointee,firstChannel:1)],microphoneChannels:1,totalChannels:3,aggregateSampleRate:micRate)
             var cursor = 0;var output:[Float] = []
             while cursor < 500 {
                 let cycles = min([1,2,4,3][cursor%4],500-cursor)
@@ -77,15 +77,45 @@ import AVFoundation
         let micPeak = micOutput.indices.max(by:{micOutput[$0] < micOutput[$1]})!
         let sysPeak = sysOutput.indices.max(by:{sysOutput[$0] < sysOutput[$1]})!
         try check(abs(micPeak-sysPeak) <= 2 && abs(micPeak-16000) <= 2,"不同格式來源的同時事件未對齊")
-        // Sustained missing/overlong sources must fail rather than grow a queue or silently drop speech.
-        let broken = try PCMInputMixer(layouts:[PCMInputLayout(micFormat.streamDescription.pointee,firstChannel:0),PCMInputLayout(sysFormat.streamDescription.pointee,firstChannel:1)],microphoneChannels:1,totalChannels:2)
-        var rejected = false
-        for _ in 0..<250 {
-            do {_ = try broken.append(copy([buffer(format:micFormat,offset:0,frames:480) {_ in 0.1},buffer(format:sysFormat,offset:0,frames:480) {_ in 0.1}],mixer:broken))}
-            catch {rejected = true;break}
+        // HAL drift compensation can deliver equal frame counts on the aggregate clock
+        // even while the tap's ASBD advertises 24 kHz. Previously this stopped at ~2 seconds.
+        let shared = try PCMInputMixer(layouts:[PCMInputLayout(micFormat.streamDescription.pointee,firstChannel:0),PCMInputLayout(sysFormat.streamDescription.pointee,firstChannel:1)],microphoneChannels:1,totalChannels:2,aggregateSampleRate:48000)
+        var sharedMic:[Float] = [];var sharedSystem:[Float] = []
+        for cycle in 0..<1000 {
+            let block = try shared.append(copy([
+                buffer(format:micFormat,offset:cycle*480,frames:480) {0.6*sin(2 * Double.pi * 300 * $0)},
+                buffer(format:sysFormat,offset:cycle*480,frames:480) {0.6*sin(2 * Double.pi * 1100 * $0/2)}
+            ],mixer:shared))
+            sharedMic += block.microphone;sharedSystem += block.system
         }
-        try check(rejected,"不同步來源沒有觸發有界緩衝保護")
-        let report:[String:Any] = ["passed":true,"version":"0.7.1","physicalCaptureStarted":false,"cases":results,"impulseAlignmentFrames":abs(micPeak-sysPeak),"checks":["48 kHz mic plus 24 kHz Bluetooth-call stream","per-stream Int16 Int32 Float32 Float64 conversion","interleaved and planar layouts","different per-source IO frame counts","bounded FIFO rejects persistent duration mismatch","hardware buffers copied before reuse","gain and both frequencies preserved","streaming duration preserved","equal-time impulses align within two 16 kHz frames"]]
+        let sharedTail = try shared.finish();sharedMic += sharedTail.microphone;sharedSystem += sharedTail.system
+        try check(shared.correctedClockStreams == 1 && shared.effectiveSampleRates == [48000,48000],"Aggregate-clock IO was treated as native 24 kHz audio")
+        try check(abs(sharedMic.count-160000) <= 32 && sharedMic.count == sharedSystem.count,"Aggregate-clock recording duration changed")
+        try check(abs(magnitude(sharedMic,hz:300)-0.6) < 0.015 && abs(magnitude(sharedSystem,hz:1100)-0.6) < 0.015,"Aggregate-clock correction changed speech pitch or lost a source")
+        try check(shared.synchronizationCorrections == 0,"Shared-clock stream needed lossy FIFO correction")
+        // Unexpected persistent timing disagreement stays bounded and keeps recording.
+        let recovering = try PCMInputMixer(layouts:[PCMInputLayout(micFormat.streamDescription.pointee,firstChannel:0),PCMInputLayout(sysFormat.streamDescription.pointee,firstChannel:1)],microphoneChannels:1,totalChannels:2)
+        var recoveredFrames = 0
+        for _ in 0..<1000 {
+            let block = try recovering.append(copy([buffer(format:micFormat,offset:0,frames:480) {_ in 0.1},buffer(format:sysFormat,offset:0,frames:480) {_ in 0.2}],mixer:recovering))
+            recoveredFrames += block.system.count
+            try check(recovering.bufferedFrames <= 3200,"Timing recovery grew an unbounded FIFO")
+            try check(block.microphone.allSatisfy {$0.isFinite} && block.system.allSatisfy {$0.isFinite},"Timing recovery produced invalid audio")
+        }
+        let recoveredTail = try recovering.finish()
+        try check(recovering.synchronizationCorrections > 0 && recovering.resampledFrames > 0 && recoveredFrames > 150000,"Timing disagreement stopped or discarded the recording")
+        try check(recoveredTail.microphone.count == recoveredTail.system.count,"Recovered sources have different tail lengths")
+        // A temporarily unavailable converter/source must not suppress the available speech.
+        let gap = try PCMInputMixer(layouts:[PCMInputLayout(micFormat.streamDescription.pointee,firstChannel:0),PCMInputLayout(sysFormat.streamDescription.pointee,firstChannel:1)],microphoneChannels:1,totalChannels:2)
+        var gapFrames = 0
+        for _ in 0..<100 {
+            let block = try gap.append(copy([buffer(format:micFormat,offset:0,frames:480) {_ in 0.3},buffer(format:sysFormat,offset:0,frames:1) {_ in 0.1}],mixer:gap))
+            gapFrames += block.microphone.count
+            try check(gap.bufferedFrames <= 3200,"Unavailable source blocked recording")
+        }
+        _ = try gap.finish()
+        try check(gapFrames > 10000 && gap.synchronizationCorrections > 0,"Available speech was lost while another source lagged")
+        let report:[String:Any] = ["passed":true,"version":"0.9.1","physicalCaptureStarted":false,"cases":results,"impulseAlignmentFrames":abs(micPeak-sysPeak),"checks":["48 kHz mic plus 24 kHz Bluetooth-call stream","per-stream Int16 Int32 Float32 Float64 conversion","interleaved and planar layouts","different per-source IO frame counts","aggregate-clock 48/24 kHz buffers keep original duration and both pitches","bounded FIFO recovers timing disagreement without stopping","available source continues across a source timing gap","hardware buffers copied before reuse","gain and both frequencies preserved","streaming duration preserved","equal-time impulses align within two 16 kHz frames"]]
         try FileManager.default.createDirectory(at:workspace.appendingPathComponent(".build/test-results"),withIntermediateDirectories:true)
         try JSONSerialization.data(withJSONObject:report,options:[.prettyPrinted,.sortedKeys]).write(to:workspace.appendingPathComponent(".build/test-results/pcm-input.json"),options:.atomic)
         print("PCM INPUT CHECKS PASSED")

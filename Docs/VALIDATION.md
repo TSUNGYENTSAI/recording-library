@@ -24,3 +24,11 @@ swiftc -swift-version 5 -O -parse-as-library -module-cache-path .build/module-ca
 ```
 
 This exercises selected local model paths, Whisper-only completion, manual Qwen naming, the automatic pipeline, deduplication, persistence and immutable prior raw output in a temporary Library. It does not record microphone/system audio. Test outputs remain under ignored `.build/` and are not published.
+
+## 0.9.1 recording synchronization recovery
+
+Regression fixtures cover a 48 kHz aggregate delivering equal-sized mic/tap buffers while the tap still advertises 24 kHz. The mixer resolves delivery rate from actual callback frame counts relative to a stream on the aggregate clock; it keeps native per-stream conversion when frame counts instead match their advertised durations. A ten-second shared-clock fixture verifies output duration and both source frequencies without FIFO correction.
+
+Persistent FIFO timing disagreement is now recoverable. The microphone/first stream is the reference: a lagging secondary source is padded with silence; an overlong secondary queue is interpolated onto the reference interval. Corrections keep buffers bounded and may affect sound/pitch during recovery. They produce a nonfatal recording notice and audit counters rather than stopping. Tail differences are padded at stop. This does not guarantee uninterrupted recording for device disconnection, actual PCM format changes or disk/write failures.
+
+Synthetic tests cover continuing through sustained mismatch and a lagging source, plus a session warning that leaves the capture controller recording. No physical microphone or system recording starts in these tests. The next live Bluetooth/meeting session must verify the observed callback sizes and listening quality on that hardware. `capture-audit.json` now includes initial callback frames, effective input rates, corrected-clock stream count, maximum skew, resampling and silence-padding counts; it contains no transcript/audio samples.

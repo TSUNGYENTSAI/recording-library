@@ -385,5 +385,6 @@
   "從錄音開始": "Start with a recording",
   "錄下會議或想法，停止後自動轉錄、命名與分類。": "Capture a meeting or an idea. Stop to transcribe, name and classify locally.",
   "先在側邊欄選擇麥克風、系統聲音或兩者一起錄。": "Choose microphone, system audio, or both in the sidebar first.",
-  "已有錄音或影片？也可以匯入。": "Already have audio or video? Import it here."
+  "已有錄音或影片？也可以匯入。": "Already have audio or video? Import it here.",
+  "已自動同步音訊來源，錄音持續中。": "Audio sources synchronized automatically. Recording continues."
 }

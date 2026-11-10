@@ -144,6 +144,7 @@ enum AudioHardwareInfo {
         } catch {core.startError = error.localizedDescription;return false}
     }
     var failureMessage:String? {core.startError}
+    var warningMessage:String? {core.timingWarning()}
     func pause() {core.pause()}
     func updateMeters() {}
     private func checkHealth() {if let error = core.healthError() {complete(error)}}
@@ -184,6 +185,7 @@ private final class SystemAudioCore {
     private var systemHeard = false
     private var frameCount:Int64 = 0
     private var failure:String?
+    private var synchronizationWarning:String?
     var startError:String?
     private(set) var closed = false
     private let url:URL
@@ -242,7 +244,7 @@ private final class SystemAudioCore {
             streamFormats.append((stream,format));nextChannel += format.mChannelsPerFrame
         }
         guard Int(nextChannel)-1 == totalChannels else {throw LibraryError("音訊聲道總數不符。")}
-        inputMixer = try PCMInputMixer(layouts:layouts,microphoneChannels:micChannels,totalChannels:totalChannels)
+        inputMixer = try PCMInputMixer(layouts:layouts,microphoneChannels:micChannels,totalChannels:totalChannels,aggregateSampleRate:rate)
         writer = try MixedAudioWriter(url:url,sampleRate:16000)
         try require(AudioDeviceCreateIOProcIDWithBlock(&io,aggregate,ioQueue) { [weak self] _,data,_,_,_ in self?.receive(data) },"建立聲音接收器")
     }
@@ -277,12 +279,16 @@ private final class SystemAudioCore {
                     return Float(10 * log10(max(1e-16,square)))
                 }
                 self.lock.lock();self.micLevel = level(microphone);self.systemLevel = level(system)
+                if inputMixer.correctedClockStreams > 0 || inputMixer.synchronizationCorrections > 0 {
+                    self.synchronizationWarning = "已自動同步音訊來源，錄音持續中。"
+                }
                 self.systemHeard = self.systemHeard || system.contains {abs($0) > 0.00001}
                 self.frameCount = self.writer?.frames ?? 0;self.pending -= 1;self.lock.unlock()
             } catch {self.lock.lock();self.failure = error.localizedDescription;self.pending -= 1;self.lock.unlock()}
         }
     }
     func snapshot() -> (elapsed:Double,mic:Float,system:Float) {lock.lock();defer {lock.unlock()};return (Double(frameCount)/16000,micLevel,systemLevel)}
+    func timingWarning() -> String? {lock.lock();defer {lock.unlock()};return synchronizationWarning}
     func healthError() -> String? {
         lock.lock();let error = failure;let stalled = accepting && !paused && Date().timeIntervalSince(lastInput) > 8;lock.unlock()
         if let error {return error}
@@ -316,7 +322,7 @@ private final class SystemAudioCore {
         }
         lock.lock();result = result ?? failure;let heard = systemHeard;let frames = writer?.frames ?? 0;frameCount = frames;lock.unlock()
         if result == nil, !heard {result = "本次未偵測到系統聲音，可能沒有播放內容或尚未允許系統錄音。音檔已保留在待處理錄音，請檢查後再儲存。"}
-        let audit:[String:Any] = ["mode":mode.rawValue,"input":inputName,"sampleRate":rate,"outputFrames":frames,"paddedTailFrames":inputMixer?.paddedTailFrames ?? 0,"systemSignalDetected":heard,"error":result ?? "","capturedAt":ISO8601DateFormatter().string(from:Date())]
+        let audit:[String:Any] = ["mode":mode.rawValue,"input":inputName,"sampleRate":rate,"outputFrames":frames,"paddedTailFrames":inputMixer?.paddedTailFrames ?? 0,"systemSignalDetected":heard,"error":result ?? "","capturedAt":ISO8601DateFormatter().string(from:Date()),"initialInputFrames":inputMixer?.initialInputFrames ?? [],"effectiveInputSampleRates":inputMixer?.effectiveSampleRates ?? [],"correctedClockStreams":inputMixer?.correctedClockStreams ?? 0,"synchronizationCorrections":inputMixer?.synchronizationCorrections ?? 0,"resampledFrames":inputMixer?.resampledFrames ?? 0,"insertedSilenceFrames":inputMixer?.insertedSilenceFrames ?? 0,"maximumSkewFrames":inputMixer?.maximumSkewFrames ?? 0]
         do {try JSONSerialization.data(withJSONObject:audit,options:[.prettyPrinted,.sortedKeys]).write(to:url.deletingLastPathComponent().appendingPathComponent("capture-audit.json"),options:.atomic)} catch {result = result ?? error.localizedDescription}
         writer = nil;cleanupHardware();closed = true
         return result

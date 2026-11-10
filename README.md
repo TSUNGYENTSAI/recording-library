@@ -71,7 +71,7 @@ The recommended downloads are pinned in [`Scripts/models.lock.json`](Scripts/mod
 
 Start from the sidebar or press **Shift-Command-R**. macOS asks for microphone and/or system audio permission when appropriate. Dual recording uses a private Core Audio aggregate and an unmuted process tap; it does not change your default input/output, volume or mute.
 
-Each input stream is converted using its own PCM format/rate, including the 48 kHz built-in mic + 24 kHz Bluetooth-call configuration. A bounded queue aligns sources before writing one 16 kHz mono PCM CAF. Dual sources use 0.5 gain each; single-source recording keeps unity gain. Source levels are displayed separately.
+Each input retains its PCM format; the mixer detects whether HAL delivers frames at the advertised stream rate or the shared aggregate clock, including the 48 kHz built-in mic + 24 kHz Bluetooth-call configuration. Bounded queues align sources before writing one 16 kHz mono PCM CAF. Timing disagreement triggers audited resampling or silence padding and a nonfatal notice, so it does not end the recording. Dual sources use 0.5 gain each; single-source recording keeps unity gain. Source levels are displayed separately.
 
 Pausing resumes the same recording. Stopping archives in place and queues transcription. No extra full recording copy is kept. Closing the window continues recording; Command-Q stops and attempts to save before quitting. Interrupted or unarchived files remain under pending recordings. Device/format changes stop recording and retain the written portion; automatic device switching is not implemented.
 

@@ -680,6 +680,7 @@ struct CaptureControls: View {
             if !capture.drafts.isEmpty {
                 Button(L("待處理錄音 \(capture.drafts.count) 份…")) {showingDrafts = true}.font(.caption).disabled(capture.busy)
             }
+            if capture.state == .recording, let warning = capture.warningMessage {Text(L(warning)).font(.caption).foregroundStyle(.teal)}
             if let error = capture.errorMessage {
                 Text(L(error)).font(.caption).foregroundStyle(.orange).lineLimit(4).help(L(error))
                 VStack(alignment:.leading,spacing:5) {
@@ -711,6 +712,7 @@ struct CaptureDraftsView: View {
                     }.disabled(capture.busy)
                 }.padding(.vertical,6)
             }.frame(minHeight:160)
+            if capture.state == .recording, let warning = capture.warningMessage {Text(L(warning)).font(.caption).foregroundStyle(.teal)}
             if let error = capture.errorMessage {Text(L(error)).font(.caption).foregroundStyle(.orange).textSelection(.enabled)}
             HStack {if capture.busy {ProgressView().controlSize(.small);Text(L("正在儲存…"))};Spacer();Button(L("關閉")) {dismiss()}.keyboardShortcut(.cancelAction)}
         }.padding(24).frame(width:570,height:410)
